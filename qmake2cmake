@@ -1,0 +1,189 @@
+#!/usr/bin/python3
+
+import argparse
+
+import config
+from qmakeparser import QmakeParser
+
+# qmakefile = []
+
+
+# def cleanup_arch(qm):
+#     global qmakefile
+
+#     state = False
+#     for line in qm:
+#         if 'linux' in line and '{' in line:
+#             continue
+#         elif '{' in line and not state:
+#             state = True
+#             continue
+#         elif '}' in line:
+#             if state:
+#                 state = False
+#             continue
+#         elif state:
+#             continue
+#         else:
+#             qmakefile.append(line)
+
+
+# def parser_elements(line, token):
+#     if "-=" in line:
+#         return None
+#     entry = re.sub("^%s|\+\=|\\\| \= " % (token),'',line.lstrip()).strip()
+#     if entry:
+#         elements = entry.split(' ')
+#         return elements
+#     return None
+
+
+# def token_extract(token):
+#     global qmakefile
+#     data = []
+#     parsing = None
+
+#     for line in qmakefile:
+#         if token in line:
+#             parsing = True
+#             entry = parser_elements(line, token)
+#             if entry:
+#                 data.extend(entry)
+#         elif parsing and '=' not in line:
+#             entry = parser_elements(line, token)
+#             if entry:
+#                 data.extend(entry)
+#             else:
+#                 parsing = False
+#                 break
+#     return data
+
+
+# def get_sources(target):
+#     sources = []
+#     src_tokens = ['RESOURCES', 'SOURCES', 'FORMS']
+#     for token in src_tokens:
+#         sources.extend(token_extract(token))
+
+#     print('set(%s_SOURCES' % (target.upper()))
+#     for src in sources:
+#         print('    %s' % (src))
+#     print('    )\n')
+
+
+# def get_headers(target):
+#     headers = token_extract('HEADERS')
+
+#     print('set(%s_HEADERS' % (target.upper()))
+#     for src in headers:
+#         print('    %s' % (src))
+#     print('    )\n')
+
+
+# def get_translations(target):
+#     ts = token_extract('TRANSLATIONS')
+#     if not ts:
+#         return False
+
+#     print('set(%s_TS' % (target.upper()))
+#     for src in ts:
+#         print('    %s' % (src))
+#     print('    )\n')
+#     print('qt5_add_translation(%s_QM' % (target.upper()))
+#     print('    ${%s_TS}' % (target.upper()))
+#     print('    )\n')
+#     return True
+
+
+# def get_target():
+#     target = token_extract('TARGET')
+#     return target[0]
+
+
+# def get_template(target):
+#     template = token_extract('TEMPLATE')
+
+#     ts = get_translations(target)
+
+#     if template[0] == 'app':
+#         print('add_executable(%s' % (target))
+#     elif template[0] == 'lib':
+#         print('add_library(%s' % (target))
+#     print('    ${%s_SOURCES}' % (target.upper()))
+#     print('    ${%s_HEADERS}' % (target.upper()))
+#     if ts:
+#         print('    ${%s_QM}' % (target.upper()))
+#     print('    )\n')
+
+
+# def get_qtmodules():
+#     return token_extract('QT')
+
+
+# def get_libs():
+#     return token_extract('LIBS')
+
+
+# def get_link_libraries(target):
+#     qt = get_qtmodules()
+#     libs = get_libs()
+#     print('target_link_libraries(%s' % (target))
+#     if len(qt) > 0:
+#         print('    PRIVATE')
+#         for qtm in qt:
+#             print('        Qt5::%s' % (qtm.capitalize()))
+#     if len(libs) > 0:
+#         print('    PUBLIC')
+#         for l in libs:
+#             print('        %s' % (l.replace('-l', '')))
+#     print('    )\n')
+
+
+# def get_compile_definitions(target):
+#     defs = token_extract('DEFINES')
+#     if not defs:
+#         return
+#     print('target_compile_definitions(%s' % (target))
+#     print('    PRIVATE')
+#     for definition in defs:
+#         print('        %s' % (definition))
+#     print('    )\n')
+
+
+# def qmake_parser():
+#     # Get the target name
+#     target = get_target()
+
+#     # Get the source list
+#     get_sources(target)
+
+#     # Get headers
+#     get_headers(target)
+
+#     # Get application type
+#     get_template(target)
+
+#     # Get links
+#     get_link_libraries(target)
+
+#     # Get definitions
+#     get_compile_definitions(target)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('qmake')
+
+    args = parser.parse_args()
+
+    try:
+        with open(args.qmake, 'r') as qmake_file:
+            qmake_parser = QmakeParser(qmake_file.readlines())
+    except IOError as e:
+        print(str(e))
+
+    qmake_parser.parse()
+
+
+if __name__ == "__main__":
+    main()
